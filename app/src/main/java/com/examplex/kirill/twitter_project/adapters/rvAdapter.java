@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.examplex.kirill.twitter_project.R;
 import com.examplex.kirill.twitter_project.models.Messages;
@@ -49,10 +50,34 @@ public class rvAdapter extends RecyclerView.Adapter<rvAdapter.RvViewholder>{
     public int getItemCount() {
         return list.size();
     }
+    public void removeItem(int position) {
+        list.remove(position);
+        notifyItemRemoved(position);
+        notifyItemRangeChanged(position, list.size());
+    }
 
     public void addItem(Messages msg) {
             list.add(msg);
             notifyItemInserted(getItemCount());
+    }
+
+    public int updatePosition(long position) {
+        int cnt = 0;
+        for(int i = list.size()-1; i >=0; i--)
+        {
+            if(list.get(i).getMsgId() == position)
+            {
+                notifyItemChanged(i);
+                cnt++;
+            }
+        }
+        return cnt;
+
+    }
+
+    public long get(int position) {
+
+        return list.get(position).getMsgId();
     }
 
 

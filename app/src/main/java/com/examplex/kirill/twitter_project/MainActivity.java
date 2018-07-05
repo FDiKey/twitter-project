@@ -4,16 +4,19 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Canvas;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.examplex.kirill.twitter_project.adapters.rvAdapter;
 import com.examplex.kirill.twitter_project.models.Messages;
@@ -23,8 +26,14 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 
 import java.util.Date;
 
+import io.realm.DynamicRealm;
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmList;
+import io.realm.RealmMigration;
+import io.realm.RealmObjectSchema;
+import io.realm.RealmResults;
+import io.realm.RealmSchema;
 
 public class MainActivity extends AppCompatActivity {
     private RealmList<Messages> list = new RealmList<>();
@@ -34,13 +43,23 @@ public class MainActivity extends AppCompatActivity {
     rvAdapter adapter;
     private AlertDialog.Builder ad;
     private RecyclerView rv;
+    public RealmConfiguration config;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         Realm.init(this);
+        config = new RealmConfiguration.Builder()
+                .schemaVersion(3)
+                .migration(new RealmMigrations())
+                .build();
+        Realm.setDefaultConfiguration(config);
+        realm = Realm.getDefaultInstance();
+//        RealmResults<Messages> res = realm.where(Messages.class).findAll();
+//        res.deleteAllFromRealm();
         initData();
         initNovigation();
 
@@ -105,12 +124,14 @@ public class MainActivity extends AppCompatActivity {
         ad.setPositiveButton(R.string.d_add, new DialogInterface.OnClickListener(){
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                Realm realm = Realm.getDefaultInstance();
 
                 Messages msg = new Messages();
                 String temp = addEdit.getText().toString();
                 realm = Realm.getDefaultInstance();
                 realm.beginTransaction();
                 msg.setMsgText(temp);
+                msg.setMsgId(idNextVal(realm));
                 msg.setMsgDate(new Date());
                 realm.insert(msg);
                 realm.commitTransaction();
@@ -126,7 +147,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
     private void initData() {
         rv = (RecyclerView) findViewById(R.id.rv);
         RecyclerView.LayoutManager lm = new LinearLayoutManager(this);
@@ -137,42 +157,92 @@ public class MainActivity extends AppCompatActivity {
         rv.setAdapter(adapter);
 
 
-    }
+        final SwipeController swipeController = new SwipeController(new SwipeControllerAction() {
+            @Override
+            public void onLeftClicked(int position) {
+                super.onLeftClicked(position);
+                long id = (long) realm.where(Messages.class).equalTo(Messages.MSG_ID, adapter.get(position)).findFirst().getMsgId();
+                Intent intent = new Intent(MainActivity.this, EditActivity.class);
+                intent.putExtra("position", id);
+                startActivityForResult(intent,1);
+            }
 
+            @Override
+            public void onRightClicked(int position) {
+                super.onRightClicked(position);
+                final Messages deletedModel = list.get(position);
+                final int deletedPosition = position;
+                Realm realm = Realm.getDefaultInstance();
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        RealmResults<Messages> result = realm.where(Messages.class)
+                                .equalTo(Messages.MSG_ID,list.get(deletedPosition).getMsgId())
+                                .findAll();
+                        result.deleteAllFromRealm();
+                    }
+                });
+                adapter.removeItem(position);
+            }
+        });
+
+        ItemTouchHelper helper = new ItemTouchHelper(swipeController);
+        helper.attachToRecyclerView(rv);
+
+        rv.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
+                swipeController.onDraw(c);
+            }
+        });
+
+
+    }
     public RealmList<Messages> initList(){
         RealmList list = new RealmList();
-        Realm realm = Realm.getDefaultInstance();
+        realm = Realm.getDefaultInstance();
         list.addAll(realm.where(Messages.class).findAll());
         return list;
     }
 
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (data == null) {return;}
+        long position = data.getLongExtra("position", 999999);
+        int cnt = adapter.updatePosition(position);
+        Toast.makeText(this, "" + cnt, Toast.LENGTH_SHORT).show();
+    }
 
 
 
+    class RealmMigrations implements RealmMigration {
 
-//
-//    @Override
-//    public Dialog onCreateDialog(Bundle savedInstanceState) {
-//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//        // Get the layout inflater
-//        LayoutInflater inflater = this.getLayoutInflater();
-//
-//        // Inflate and set the layout for the dialog
-//        // Pass null as the parent view because its going in the dialog layout
-//        builder.setView(inflater.inflate(R.layout.add_item, null))
-//                // Add action buttons
-//                .setPositiveButton(R.string.signin, new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int id) {
-//                        // sign in the user ...
-//                    }
-//                })
-//                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-//                    public void onClick(DialogInterface dialog, int id) {
-//                        LoginDialogFragment.this.getDialog().cancel();
-//                    }
-//                });
-//        return builder.create();
-//    }
+    @Override
+    public void migrate(DynamicRealm realm, long oldVersion, long newVersion) {
+        final RealmSchema schema = realm.getSchema();
+
+//        if (oldVersion == 0) {
+            final RealmObjectSchema userSchema = schema.get("Messages");
+
+           userSchema.addField(Messages.MSG_ID, long.class);
+//        }
+        newVersion = oldVersion++;
+    }
+}
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        realm.close();
+    }
+    public long idNextVal (Realm realm)
+
+    {
+        Number maxId;
+        maxId = (long) (realm.where(Messages.class).max(Messages.MSG_ID));
+        long nextId = (maxId == null) ? 1 : maxId.intValue() + 1;
+        return  nextId;
+
+    }
 }
