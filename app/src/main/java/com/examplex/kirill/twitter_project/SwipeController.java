@@ -149,8 +149,8 @@ public class SwipeController extends Callback {
     }
 
     private void drawButtons(Canvas c, RecyclerView.ViewHolder viewHolder) {
-        float buttonWidthWithoutPadding = buttonWidth - 20;
-        float corners = 16;
+        float buttonWidthWithoutPadding = buttonWidth;
+        float corners = 8;
 
         View itemView = viewHolder.itemView;
         Paint p = new Paint();

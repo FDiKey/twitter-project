@@ -12,6 +12,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -23,7 +24,21 @@ import com.examplex.kirill.twitter_project.models.Messages;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
+import com.vk.sdk.VKAccessToken;
+import com.vk.sdk.VKCallback;
+import com.vk.sdk.VKScope;
+import com.vk.sdk.VKSdk;
+import com.vk.sdk.api.VKApi;
+import com.vk.sdk.api.VKApiConst;
+import com.vk.sdk.api.VKError;
+import com.vk.sdk.api.VKParameters;
+import com.vk.sdk.api.VKRequest;
+import com.vk.sdk.api.VKResponse;
+import com.vk.sdk.api.model.VKApiUserFull;
+import com.vk.sdk.api.model.VKList;
+import com.vk.sdk.util.VKUtil;
 
+import java.util.Arrays;
 import java.util.Date;
 
 import io.realm.DynamicRealm;
@@ -44,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private AlertDialog.Builder ad;
     private RecyclerView rv;
     public RealmConfiguration config;
+    Messages msg = new Messages();
 
 
     @Override
@@ -51,17 +67,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Realm.init(this);
-        config = new RealmConfiguration.Builder()
-                .schemaVersion(3)
-                .migration(new RealmMigrations())
-                .build();
-        Realm.setDefaultConfiguration(config);
-        realm = Realm.getDefaultInstance();
+
+
+        //Realm.init(this);
+//        config = new RealmConfiguration.Builder()
+//                .schemaVersion(3)
+//                .migration(new RealmMigrations())
+//                .build();
+//        Realm.setDefaultConfiguration(config);
+
 //        RealmResults<Messages> res = realm.where(Messages.class).findAll();
 //        res.deleteAllFromRealm();
         initData();
         initNovigation();
+
+
 
     }
 
@@ -196,7 +216,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
     }
     public RealmList<Messages> initList(){
         RealmList list = new RealmList();
@@ -209,10 +228,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (data == null) {return;}
-        long position = data.getLongExtra("position", 999999);
-        int cnt = adapter.updatePosition(position);
-        Toast.makeText(this, "" + cnt, Toast.LENGTH_SHORT).show();
+
+            if(resultCode == RESULT_OK) {
+                long position = data.getLongExtra("position", 999999);
+                int cnt = adapter.updatePosition(position);
+                Toast.makeText(this, "" + cnt, Toast.LENGTH_SHORT).show();
+            } else {
+
+            }
     }
+
 
 
 
@@ -240,9 +265,12 @@ public class MainActivity extends AppCompatActivity {
 
     {
         Number maxId;
-        maxId = (long) (realm.where(Messages.class).max(Messages.MSG_ID));
+        maxId = (Number) (realm.where(Messages.class).max(Messages.MSG_ID));
         long nextId = (maxId == null) ? 1 : maxId.intValue() + 1;
         return  nextId;
 
     }
+
+
+
 }

@@ -1,10 +1,12 @@
 <resources>
     <string name="app_name">twitter_project</string>
-    <string name="d_List">Список</string>
-    <string name="d_add">Добавить</string>
-    <string name="d_profile">Профиль</string>
+    <string name="d_List">LIST</string>
+    <string name="d_add">ADD</string>
+    <string name="d_profile">PROFILE</string>
     <string name="adTitle">Add Message</string>
-    <string name="cancel">Отмена</string>
+    <string name="cancel">Cancel</string>
     <string name="save">Save</string>
     <string name="Cancel_btn">Cancel</string>
+
+    <integer name="com_vk_sdk_AppId">6626617</integer>
 </resources>
