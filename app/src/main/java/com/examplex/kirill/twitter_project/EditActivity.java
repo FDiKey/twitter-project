@@ -45,39 +45,44 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initData() {
-        edittext = (EditText) findViewById(R.id.edit_text);
-        btn_cancel= (Button) findViewById(R.id.edit_btn_cancel);
-        btn_save= (Button) findViewById(R.id.edit_btn_save);
-        btn_cancel.setOnClickListener(this);
-        btn_save.setOnClickListener(this);
+//        edittext = (EditText) findViewById(R.id.edit_text);
+//        btn_cancel= (Button) findViewById(R.id.edit_btn_cancel);
+//        btn_save= (Button) findViewById(R.id.edit_btn_save);
+//        btn_cancel.setOnClickListener(this);
+//        btn_save.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId())
-        {
-            case R.id.edit_btn_save: {
 
-                Messages msg = realm.where(Messages.class).equalTo(Messages.MSG_ID, position).findFirst();
-                if(msg != null)
-                {
-                    realm.beginTransaction();
-                    msg.setMsgText(edittext.getText().toString());
-                    realm.commitTransaction();
-                    Intent intent = new Intent();
-                    intent.putExtra("position", msg.getMsgId());
-
-                    setResult(RESULT_OK,intent);
-                    finish();
-                } else {
-                    Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
-                }
-                break;
-            }
-            case R.id.edit_btn_cancel:{
-                finish();
-                break;
-            }
-        }
     }
+
+//    @Override
+//    public void onClick(View v) {
+//        switch (v.getId())
+//        {
+//            case R.id.edit_btn_save: {
+//
+//                Messages msg = realm.where(Messages.class).equalTo(Messages.MSG_ID, position).findFirst();
+//                if(msg != null)
+//                {
+//                    realm.beginTransaction();
+//                    msg.setMsgText(edittext.getText().toString());
+//                    realm.commitTransaction();
+//                    Intent intent = new Intent();
+//                    intent.putExtra("position", msg.getMsgId());
+//
+//                    setResult(RESULT_OK,intent);
+//                    finish();
+//                } else {
+//                    Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
+//                }
+//                break;
+//            }
+//            case R.id.edit_btn_cancel:{
+//                finish();
+//                break;
+//            }
+//        }
+//    }
 }

@@ -1,40 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<android.support.v7.widget.AlertDialogLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".EditActivity">
-
+    android:layout_height="match_parent">
     <EditText
-        android:id="@+id/edit_text"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="top"
-        />
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:layout_weight="9"
-        >
-    <Button android:id="@+id/edit_btn_save"
-        android:layout_width="wrap_content"
+        android:id="@+id/edit_item"
         android:layout_height="wrap_content"
-        android:text="@string/save"
-        android:layout_alignParentRight="true"
-        />
+        android:layout_width="match_parent"
+        android:hint="Enter message">
+        <requestFocus/>
+    </EditText>
 
-
-    <Button android:id="@+id/edit_btn_cancel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/Cancel_btn"
-        android:layout_alignParentLeft="true"/>
-    </RelativeLayout>
-
-
-</LinearLayout>
+</android.support.v7.widget.AlertDialogLayout>

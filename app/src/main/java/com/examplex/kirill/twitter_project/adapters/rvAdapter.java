@@ -21,7 +21,7 @@ import io.realm.RealmList;
 
 public class rvAdapter extends RecyclerView.Adapter<rvAdapter.RvViewholder>{
 
-    private RealmList<Messages> list;
+    public RealmList<Messages> list;
     private SimpleDateFormat dFormat;
 
     public rvAdapter(RealmList<Messages> list) {
@@ -63,11 +63,12 @@ public class rvAdapter extends RecyclerView.Adapter<rvAdapter.RvViewholder>{
 
     public int updatePosition(long position) {
         int cnt = 0;
-        for(int i = list.size()-1; i >=0; i--)
+        for(int i = 0; i < list.size(); i++)
         {
             if(list.get(i).getMsgId() == position)
             {
                 notifyItemChanged(i);
+                notifyDataSetChanged();
                 cnt++;
             }
         }

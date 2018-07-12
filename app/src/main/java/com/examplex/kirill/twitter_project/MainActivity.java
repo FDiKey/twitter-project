@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.examplex.kirill.twitter_project.adapters.rvAdapter;
@@ -57,9 +58,11 @@ public class MainActivity extends AppCompatActivity {
     Realm realm;
     rvAdapter adapter;
     private AlertDialog.Builder ad;
+    private MyAlertDialog editAd;
     private RecyclerView rv;
     public RealmConfiguration config;
     Messages msg = new Messages();
+    long editID = 0;
 
 
     @Override
@@ -69,15 +72,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        //Realm.init(this);
-//        config = new RealmConfiguration.Builder()
-//                .schemaVersion(3)
-//                .migration(new RealmMigrations())
-//                .build();
-//        Realm.setDefaultConfiguration(config);
-
-//        RealmResults<Messages> res = realm.where(Messages.class).findAll();
-//        res.deleteAllFromRealm();
         initData();
         initNovigation();
 
@@ -144,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         ad.setPositiveButton(R.string.d_add, new DialogInterface.OnClickListener(){
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Realm realm = Realm.getDefaultInstance();
+                Realm realm;
 
                 Messages msg = new Messages();
                 String temp = addEdit.getText().toString();
@@ -166,6 +160,11 @@ public class MainActivity extends AppCompatActivity {
         }).create();
 
 
+
+
+
+
+
     }
     private void initData() {
         rv = (RecyclerView) findViewById(R.id.rv);
@@ -181,10 +180,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onLeftClicked(int position) {
                 super.onLeftClicked(position);
-                long id = (long) realm.where(Messages.class).equalTo(Messages.MSG_ID, adapter.get(position)).findFirst().getMsgId();
-                Intent intent = new Intent(MainActivity.this, EditActivity.class);
-                intent.putExtra("position", id);
-                startActivityForResult(intent,1);
+
+                editID = adapter.list.get(position).getMsgId();
+                editAd = new MyAlertDialog(editID, adapter);
+                editAd.show(getSupportFragmentManager(),"MyAlertDialog");
+
+
             }
 
             @Override
@@ -262,7 +263,6 @@ public class MainActivity extends AppCompatActivity {
         realm.close();
     }
     public long idNextVal (Realm realm)
-
     {
         Number maxId;
         maxId = (Number) (realm.where(Messages.class).max(Messages.MSG_ID));
