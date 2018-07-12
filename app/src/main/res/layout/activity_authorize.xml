@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Authorize">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:layout_margin="32dp"
+        >
+
+            <EditText android:id="@+id/user_email"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:hint="@string/email"
+                android:inputType="textEmailAddress"
+                android:layout_centerInParent="true"/>
+
+            <EditText android:id="@+id/user_password"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:hint="@string/password"
+                android:inputType="textPassword"
+                android:layout_below="@id/user_email"
+                />
+
+                <Button
+                    android:id="@+id/btn_sign_up"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:text="Sign up"
+                    android:layout_below="@id/user_password"
+                    />
+                <Button
+                    android:id="@+id/btn_sign_in"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:text="Sign in"
+                    android:layout_below="@id/user_password"
+                    android:layout_alignParentRight="true"
+                    />
+
+
+        </RelativeLayout>
+</RelativeLayout>

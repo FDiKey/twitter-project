@@ -1,14 +1,12 @@
 package com.examplex.kirill.twitter_project.models;
 
-import java.io.Serializable;
+
 import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
 
-
-public class Messages extends RealmObject implements Serializable {
+public class Messages extends RealmObject{
 
     public static final String MSG_ID = "msgId";
     public static final String MSG_Text = "msgText";
@@ -18,6 +16,9 @@ public class Messages extends RealmObject implements Serializable {
     long msgId;
     String msgText;
     Date msgDate;
+
+    public Messages() {
+    }
 
     public long getMsgId() {
         return msgId;

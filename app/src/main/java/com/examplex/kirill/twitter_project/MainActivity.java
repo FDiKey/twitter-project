@@ -1,6 +1,5 @@
 package com.examplex.kirill.twitter_project;
 
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,39 +11,36 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.examplex.kirill.twitter_project.adapters.rvAdapter;
 import com.examplex.kirill.twitter_project.models.Messages;
+import com.examplex.kirill.twitter_project.models.Msg;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.ValueEventListener;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
-import com.vk.sdk.VKAccessToken;
-import com.vk.sdk.VKCallback;
-import com.vk.sdk.VKScope;
-import com.vk.sdk.VKSdk;
-import com.vk.sdk.api.VKApi;
-import com.vk.sdk.api.VKApiConst;
-import com.vk.sdk.api.VKError;
-import com.vk.sdk.api.VKParameters;
-import com.vk.sdk.api.VKRequest;
-import com.vk.sdk.api.VKResponse;
-import com.vk.sdk.api.model.VKApiUserFull;
-import com.vk.sdk.api.model.VKList;
-import com.vk.sdk.util.VKUtil;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import io.realm.DynamicRealm;
 import io.realm.Realm;
-import io.realm.RealmConfiguration;
 import io.realm.RealmList;
 import io.realm.RealmMigration;
 import io.realm.RealmObjectSchema;
@@ -54,13 +50,18 @@ import io.realm.RealmSchema;
 public class MainActivity extends AppCompatActivity {
     private RealmList<Messages> list = new RealmList<>();
     final Context context = this;
+    private String[] tempList;
+    FirebaseAuth mAuth;
+    DatabaseReference mRef;
+
+    List<String> tasks;
+
     EditText addEdit;
     Realm realm;
     rvAdapter adapter;
     private AlertDialog.Builder ad;
     private MyAlertDialog editAd;
     private RecyclerView rv;
-    public RealmConfiguration config;
     Messages msg = new Messages();
     long editID = 0;
 
@@ -71,12 +72,51 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-
+        initFB();
         initData();
         initNovigation();
 
 
 
+    }
+
+    private void initFB() {
+        mRef = FirebaseDatabase.getInstance().getReference();
+
+        final FirebaseUser user = mAuth.getInstance().getCurrentUser();
+//        Msg msg = new Msg(user.getUid(),"hw!");
+
+//        mRef.child(user.getUid()).setValue(msg);
+
+
+        mRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+//                System.out.println(dataSnapshot.child("msgText").getValue().toString());
+                List<String> temp;
+                GenericTypeIndicator<List<String>> t = new GenericTypeIndicator<List<String>>(){};
+                tasks = dataSnapshot.child("magText").getValue(t);
+                for(int i = 0; i < tasks.size(); i++)
+                {
+                System.out.println(tasks.get(i));
+                Messages m = new Messages();
+                m.setMsgId(idNextVal(realm));
+                m.setMsgDate(new Date());
+                m.setMsgText(tasks.get(i));
+                adapter.addItem(m);
+            }
+
+
+
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void initNovigation() {
@@ -216,7 +256,9 @@ public class MainActivity extends AppCompatActivity {
                 swipeController.onDraw(c);
             }
         });
-
+//    realm.beginTransaction();
+//    realm.delete(Messages.class);
+//    realm.commitTransaction();
     }
     public RealmList<Messages> initList(){
         RealmList list = new RealmList();

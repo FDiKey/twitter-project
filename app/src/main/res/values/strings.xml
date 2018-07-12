@@ -7,6 +7,8 @@
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
     <string name="Cancel_btn">Cancel</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
 
     <integer name="com_vk_sdk_AppId">6626617</integer>
 </resources>
