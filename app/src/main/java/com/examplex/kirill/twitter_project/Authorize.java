@@ -9,17 +9,34 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.examplex.kirill.twitter_project.models.Messages;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import io.realm.Realm;
 
 public class Authorize extends AppCompatActivity implements View.OnClickListener{
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mListner;
+    List<String> tasks;
+
     EditText email, password;
     Button signUp, signIn;
+    Realm realm;
+
+    DatabaseReference mRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,12 +53,11 @@ public class Authorize extends AppCompatActivity implements View.OnClickListener
 
         signIn = (Button) findViewById(R.id.btn_sign_in);
         signUp = (Button) findViewById(R.id.btn_sign_up);
-        initAuth();
 
         signIn.setOnClickListener(this);
         signUp.setOnClickListener(this);
 
-
+        initAuth();
     }
 
     private void initAuth() {
@@ -50,9 +66,10 @@ public class Authorize extends AppCompatActivity implements View.OnClickListener
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
-
-                if(user == null)
+                if(user != null)
                 {
+
+
                     Intent i = new Intent(Authorize.this, MainActivity.class);
                     startActivity(i);
                 }
@@ -78,12 +95,9 @@ public class Authorize extends AppCompatActivity implements View.OnClickListener
             case R.id.btn_sign_in:{
                 
                 singin(email.getText().toString(), password.getText().toString());
-
-                
                 break;
             }
             case R.id.btn_sign_up:{
-                
                 signup(email.getText().toString(), password.getText().toString());
                 break;
             }
@@ -117,5 +131,15 @@ public class Authorize extends AppCompatActivity implements View.OnClickListener
                     Toast.makeText(Authorize.this, "Sign Up Unuccessful"+"", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    public long idNextVal (Realm realm)
+
+    {
+        Number maxId;
+        maxId = (Number) (realm.where(Messages.class).max(Messages.MSG_ID));
+        long nextId = (maxId == null) ? 1 : maxId.intValue() + 1;
+        return  nextId;
+
     }
 }

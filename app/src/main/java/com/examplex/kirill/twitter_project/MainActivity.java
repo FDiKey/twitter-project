@@ -16,12 +16,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import com.examplex.kirill.twitter_project.adapters.rvAdapter;
 import com.examplex.kirill.twitter_project.models.Messages;
-import com.examplex.kirill.twitter_project.models.Msg;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -32,15 +29,14 @@ import com.google.firebase.database.ValueEventListener;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
-
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import io.realm.DynamicRealm;
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmList;
 import io.realm.RealmMigration;
 import io.realm.RealmObjectSchema;
@@ -53,8 +49,10 @@ public class MainActivity extends AppCompatActivity {
     private String[] tempList;
     FirebaseAuth mAuth;
     DatabaseReference mRef;
+    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
     List<String> tasks;
+    public HashMap<String,String> msgMap;
 
     EditText addEdit;
     Realm realm;
@@ -64,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView rv;
     Messages msg = new Messages();
     long editID = 0;
+    boolean authorize = false;
 
 
     @Override
@@ -71,52 +70,54 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Realm.init(this);
 
+        realm = Realm.getDefaultInstance();
         initFB();
-        initData();
+//        initData();
         initNovigation();
 
-
-
     }
+
+
 
     private void initFB() {
         mRef = FirebaseDatabase.getInstance().getReference();
 
         final FirebaseUser user = mAuth.getInstance().getCurrentUser();
-//        Msg msg = new Msg(user.getUid(),"hw!");
-
-//        mRef.child(user.getUid()).setValue(msg);
 
 
         mRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
 
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-//                System.out.println(dataSnapshot.child("msgText").getValue().toString());
-                List<String> temp;
-                GenericTypeIndicator<List<String>> t = new GenericTypeIndicator<List<String>>(){};
-                tasks = dataSnapshot.child("magText").getValue(t);
-                for(int i = 0; i < tasks.size(); i++)
-                {
-                System.out.println(tasks.get(i));
-                Messages m = new Messages();
-                m.setMsgId(idNextVal(realm));
-                m.setMsgDate(new Date());
-                m.setMsgText(tasks.get(i));
-                adapter.addItem(m);
-            }
 
+                if(!authorize) {
 
+                    Realm realm = Realm.getDefaultInstance();
+                    List<Messages> l = realm.where(Messages.class).findAll();
+                    int cnt = 0;
+                    GenericTypeIndicator<HashMap<String, String>> t = new GenericTypeIndicator<HashMap<String, String>>() {
+                    };
+                    msgMap = dataSnapshot.child("magText").getValue(t);
+                    authorize = true;
+                    initData();
+                }
+                else{
 
+                }
 
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
+
+
             }
         });
+
+
     }
 
     private void initNovigation() {
@@ -182,14 +183,19 @@ public class MainActivity extends AppCompatActivity {
 
                 Messages msg = new Messages();
                 String temp = addEdit.getText().toString();
+                String s = mRef.child(user.getUid()).child("magText").push().getKey();
+                mRef.child(user.getUid()).child("magText").child(s).setValue(temp);
                 realm = Realm.getDefaultInstance();
                 realm.beginTransaction();
                 msg.setMsgText(temp);
                 msg.setMsgId(idNextVal(realm));
                 msg.setMsgDate(new Date());
+                msg.setFbKey(s);
                 realm.insert(msg);
                 realm.commitTransaction();
                 adapter.addItem(msg);
+
+
             }
 
         }).setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -207,6 +213,17 @@ public class MainActivity extends AppCompatActivity {
 
     }
     private void initData() {
+        for (Map.Entry<String, String> value : msgMap.entrySet()) {
+            Messages m = new Messages();
+            realm.beginTransaction();
+            m.setFbKey(msgMap.keySet().toString());
+            m.setMsgId(idNextVal(realm));
+            m.setMsgDate(new Date());
+            m.setFbKey(value.getKey());
+            m.setMsgText(value.getValue());
+            realm.insert(m);
+            realm.commitTransaction();
+        }
         rv = (RecyclerView) findViewById(R.id.rv);
         RecyclerView.LayoutManager lm = new LinearLayoutManager(this);
         rv.setLayoutManager(lm);
@@ -222,18 +239,19 @@ public class MainActivity extends AppCompatActivity {
                 super.onLeftClicked(position);
 
                 editID = adapter.list.get(position).getMsgId();
-                editAd = new MyAlertDialog(editID, adapter);
+                editAd = new MyAlertDialog(editID, adapter, msgMap);
                 editAd.show(getSupportFragmentManager(),"MyAlertDialog");
 
-
             }
-
+            int p;
             @Override
-            public void onRightClicked(int position) {
+            public void onRightClicked(final int position) {
                 super.onRightClicked(position);
+                p = position;
                 final Messages deletedModel = list.get(position);
                 final int deletedPosition = position;
                 Realm realm = Realm.getDefaultInstance();
+                mRef.child(user.getUid()).child("magText").child(list.get(position).getFbKey()).removeValue();
                 realm.executeTransaction(new Realm.Transaction() {
                     @Override
                     public void execute(Realm realm) {
@@ -243,9 +261,11 @@ public class MainActivity extends AppCompatActivity {
                         result.deleteAllFromRealm();
                     }
                 });
+
                 adapter.removeItem(position);
+
             }
-        });
+        }); // SWIPES LEFT AND RIGHT
 
         ItemTouchHelper helper = new ItemTouchHelper(swipeController);
         helper.attachToRecyclerView(rv);
@@ -256,14 +276,17 @@ public class MainActivity extends AppCompatActivity {
                 swipeController.onDraw(c);
             }
         });
-//    realm.beginTransaction();
-//    realm.delete(Messages.class);
-//    realm.commitTransaction();
+
     }
     public RealmList<Messages> initList(){
         RealmList list = new RealmList();
         realm = Realm.getDefaultInstance();
         list.addAll(realm.where(Messages.class).findAll());
+        for(int i =0; i < list.size(); i++)
+        {
+            System.out.println(list.get(i) );
+        }
+        System.out.println("11111111");
         return list;
     }
 
@@ -294,6 +317,7 @@ public class MainActivity extends AppCompatActivity {
             final RealmObjectSchema userSchema = schema.get("Messages");
 
            userSchema.addField(Messages.MSG_ID, long.class);
+           userSchema.addField("fbKey", String.class);
 //        }
         newVersion = oldVersion++;
     }
@@ -304,14 +328,14 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         realm.close();
     }
-    public long idNextVal (Realm realm)
-    {
+    public long idNextVal (Realm realm){
         Number maxId;
         maxId = (Number) (realm.where(Messages.class).max(Messages.MSG_ID));
         long nextId = (maxId == null) ? 1 : maxId.intValue() + 1;
         return  nextId;
 
     }
+
 
 
 

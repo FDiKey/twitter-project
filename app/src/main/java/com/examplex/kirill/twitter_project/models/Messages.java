@@ -14,6 +14,8 @@ public class Messages extends RealmObject{
 
 
     long msgId;
+
+    String fbKey;
     String msgText;
     Date msgDate;
 
@@ -44,8 +46,15 @@ public class Messages extends RealmObject{
         this.msgDate = msgDate;
     }
 
-    public int idNextVal (Realm realm)
+    public String getFbKey() {
+        return fbKey;
+    }
 
+    public void setFbKey(String fbKey) {
+        this.fbKey = fbKey;
+    }
+
+    public int idNextVal (Realm realm)
     {
         Number maxId;
         try {
@@ -56,6 +65,5 @@ public class Messages extends RealmObject{
         }
         int nextId = (maxId == null) ? 1 : maxId.intValue() + 1;
         return  nextId;
-
     }
 }

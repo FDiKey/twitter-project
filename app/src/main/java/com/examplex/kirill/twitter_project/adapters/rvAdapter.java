@@ -68,9 +68,9 @@ public class rvAdapter extends RecyclerView.Adapter<rvAdapter.RvViewholder>{
             if(list.get(i).getMsgId() == position)
             {
                 notifyItemChanged(i);
-                notifyDataSetChanged();
                 cnt++;
             }
+
         }
         return cnt;
 
